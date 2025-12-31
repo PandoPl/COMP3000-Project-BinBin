@@ -1,0 +1,11 @@
+bin_id: 1
+
+# My PC's IP address
+backend_base_url: "http://192.168.0.180:5000"
+
+# Bin fullness threshold in cm (distance from sensor to waste)
+full_threshold_cm: 15.0
+
+# Polling intervals
+distance_poll_seconds: 2
+post_full_event_cooldown_seconds: 30
