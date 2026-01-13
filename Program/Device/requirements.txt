@@ -1,3 +1,5 @@
+gpiozero
+picamera2
 numpy
 Pillow
 requests
