@@ -24,7 +24,7 @@ def main():
     poll_s = int(cfg.get("distance_poll_seconds", 2))
     cooldown_s = int(cfg.get("post_full_event_cooldown_seconds", 30))
 
-    sensor = BinDistanceSensor(trigger_pin=23)
+    sensor = BinDistanceSensor(trigger_pin=23, echo_pin=24)
 
     last_full_post = 0.0
 
@@ -38,14 +38,16 @@ def main():
         post_event(base_url, {
             "bin_id": bin_id,
             "event_type": "fill_level",
-            "distance_cm": float(dist_cm)
+            "distance_cm": float(dist_cm),
+            "timestamp": now
         })
 
         if is_full and (now - last_full_post) > cooldown_s:
             ok = post_event(base_url, {
                 "bin_id": bin_id,
                 "event_type": "bin_full",
-                "distance_cm": float(dist_cm)
+                "distance_cm": float(dist_cm),
+                "timestamp": now
             })
             print("[FULL EVENT]", "sent" if ok else "failed")
             last_full_post = now
