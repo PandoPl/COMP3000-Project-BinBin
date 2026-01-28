@@ -2,11 +2,16 @@ from gpiozero import DistanceSensor
 from time import sleep
 
 class BinDistanceSensor:
-    def __init__(self, pin: int = 23, max_distance_m: float = 3.0):
+    def __init__(
+        self,
+        trigger_pin: int = 23,
+        echo_pin: int = 24,
+        max_distance_m: float = 3.0
+    ):
         self.sensor = DistanceSensor(
-            echo = pin,
-            trigger = pin,
-            max_distance = max_distance_m
+            trigger=trigger_pin,
+            echo=echo_pin,
+            max_distance=max_distance_m
         )
 
     def get_distance_cm(self) -> float:
@@ -17,8 +22,7 @@ class BinDistanceSensor:
 
 
 if __name__ == "__main__":
-    s = BinDistanceSensor(pin = 23)
+    s = BinDistanceSensor(trigger_pin=23, echo_pin=24)
     while True:
-        d = s.get_distance_cm()
-        print(f"Distance: {d:.2f} cm")
+        print(f"Distance: {s.get_distance_cm():.2f} cm")
         sleep(1)
