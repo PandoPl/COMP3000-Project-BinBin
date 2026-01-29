@@ -1,6 +1,8 @@
-# backend/models.py
 from datetime import datetime, timezone
 from db import db
+
+def now_utc():
+    return datetime.now(timezone.utc)
 
 class Bin(db.Model):
     __tablename__ = "bins"
@@ -26,15 +28,19 @@ class Event(db.Model):
 
     id = db.Column(db.Integer, primary_key = True)
     bin_id = db.Column(db.Integer, db.ForeignKey("bins.id"), nullable=False)
-    timestamp = db.Column(db.DateTime(timezone = True), default = datetime.now(timezone.utc))
+    timestamp = db.Column(db.DateTime(timezone = True), default = now_utc)
     event_type = db.Column(db.String(30))  # e.g. "fill_level", "classification"
     distance_cm = db.Column(db.Float)      # for fill_level events
     label = db.Column(db.String(50))       # e.g. "plastic_bottle"
     confidence = db.Column(db.Float)
 
+    image_path = db.Column(db.String(255)) # relative to /static/
+
     bin = db.relationship("Bin", backref = "events")
 
     def to_dict(self):
+        image_url = f"/static/{self.image_path}" if self.image_path else None
+
         return {
             "id": self.id,
             "bin_id": self.bin_id,
@@ -43,4 +49,5 @@ class Event(db.Model):
             "distance_cm": self.distance_cm,
             "label": self.label,
             "confidence": self.confidence,
+            "image_url": image_url
         }
