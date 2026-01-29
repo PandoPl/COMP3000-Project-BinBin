@@ -1,22 +1,21 @@
-<!-- backend/templates/index.html -->
 <!doctype html>
-<html lang="en">
+<html lang = "en">
   <head>
-    <meta charset="utf-8">
+    <meta charset = "utf-8">
     <title>BinBin Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel = "stylesheet" href = "{{ url_for('static', filename='style.css') }}">
   </head>
   <body>
     <h1>BinBin Dashboard</h1>
 
     <section>
       <h2>Bins</h2>
-      <div id="bins"></div>
+      <div id = "bins"></div>
     </section>
 
     <section>
       <h2>Recent Events</h2>
-      <div id="events"></div>
+      <div id = "events"></div>
     </section>
 
     <script>
@@ -24,13 +23,16 @@
         const res = await fetch("/api/bins");
         const data = await res.json();
         const div = document.getElementById("bins");
+
         if (data.length === 0) {
           div.innerHTML = "<p>No bins configured yet.</p>";
           return;
         }
+
         let html = "<ul>";
+
         for (const b of data) {
-          html += `<li><strong>${b.name}</strong> (${b.bin_type}) – threshold: ${b.full_threshold_cm} cm</li>`;
+          html += `<li><strong>${b.name}</strong> (id: ${b.id}) (${b.bin_type}) – threshold: ${b.full_threshold_cm} cm</li>`;
         }
         html += "</ul>";
         div.innerHTML = html;
@@ -44,7 +46,9 @@
           div.innerHTML = "<p>No events yet.</p>";
           return;
         }
-        let html = "<table><tr><th>Time</th><th>Bin</th><th>Type</th><th>Distance (cm)</th><th>Label</th><th>Conf.</th></tr>";
+
+        let html = "<table><tr><th>Time</th><th>Bin</th><th>Type</th><th>Distance (cm)</th><th>Label</th><th>Conf.</th><th>Image</th></tr>";
+        
         for (const e of data) {
           html += `<tr>
             <td>${e.timestamp}</td>
@@ -53,15 +57,17 @@
             <td>${e.distance_cm ?? ""}</td>
             <td>${e.label || ""}</td>
             <td>${e.confidence != null ? e.confidence.toFixed(2) : ""}</td>
+            <td>${e.image_url ? `<a href="${e.image_url}" target="_blank">view</a>` : ""}</td>
           </tr>`;
         }
+
         html += "</table>";
         div.innerHTML = html;
       }
 
       loadBins();
       loadEvents();
-      setInterval(loadEvents, 5000); // refresh events every 5s
+      setInterval(loadEvents, 5000);
     </script>
   </body>
 </html>
