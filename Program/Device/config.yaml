@@ -9,3 +9,8 @@ full_threshold_cm: 15.0
 # Polling intervals
 distance_poll_seconds: 2
 post_full_event_cooldown_seconds: 30
+
+# Used to detect trash being dropped
+deposit_drop_cm: 6.0
+deposit_stable_samples: 2
+deposit_cooldown_seconds: 8
