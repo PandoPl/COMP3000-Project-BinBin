@@ -14,8 +14,13 @@
     </section>
 
     <section>
-      <h2>Recent Events</h2>
-      <div id = "events"></div>
+      <h2>Recent Deposit Events (Label for Dataset)</h2>
+      <div id = "deposit_events"></div>
+    </section>
+
+    <section>
+      <h2>Recent Events (All)</h2>
+      <div id = "all_events"></div>
     </section>
 
     <script>
@@ -38,25 +43,73 @@
         div.innerHTML = html;
       }
 
-      async function loadEvents() {
+      async function setLabel(eventId, label) {
+        const res = await fetch(`/api/events/${eventId}/label`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ human_label: label, verified: true })
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          alert("Failed to label: " + txt);
+          return;
+        }
+
+        loadDepositEvents();
+        loadAllEvents();
+      }
+
+      async function loadDepositEvents() {
+        const res = await fetch("/api/events?event_type=deposit");
+        const data = await res.json();
+        const div = document.getElementById("deposit_events");
+
+        if (data.length === 0) {
+          div.innerHTML = "<p>No deposit events yet.</p>";
+          return;
+        }
+
+        let html = "<table><tr><th>Time</th><th>Bin</th><th>Distance (cm)</th><th>Image</th><th>Human Label</th><th>Actions</th></tr>";
+
+        for (const e of data) {
+          const label = e.human_label || "";
+          html += `<tr>
+            <td>${e.timestamp}</td>
+            <td>${e.bin_id}</td>
+            <td>${e.distance_cm ?? ""}</td>
+            <td>${e.image_url ? `<a href="${e.image_url}" target="_blank">view</a>` : ""}</td>
+            <td>${label}</td>
+            <td>
+              <button onclick="setLabel(${e.id}, 'recyclable')">Recyclable</button>
+              <button onclick="setLabel(${e.id}, 'non_recyclable')">Non-recyclable</button>
+            </td>
+          </tr>`;
+        }
+
+        html += "</table>";
+        div.innerHTML = html;
+      }
+
+      async function loadAllEvents() {
         const res = await fetch("/api/events");
         const data = await res.json();
-        const div = document.getElementById("events");
+        const div = document.getElementById("all_events");
+
         if (data.length === 0) {
           div.innerHTML = "<p>No events yet.</p>";
           return;
         }
 
-        let html = "<table><tr><th>Time</th><th>Bin</th><th>Type</th><th>Distance (cm)</th><th>Label</th><th>Conf.</th><th>Image</th></tr>";
-        
+        let html = "<table><tr><th>Time</th><th>Bin</th><th>Type</th><th>Distance (cm)</th><th>Human Label</th><th>Image</th></tr>";
+
         for (const e of data) {
           html += `<tr>
             <td>${e.timestamp}</td>
             <td>${e.bin_id}</td>
             <td>${e.event_type || ""}</td>
             <td>${e.distance_cm ?? ""}</td>
-            <td>${e.label || ""}</td>
-            <td>${e.confidence != null ? e.confidence.toFixed(2) : ""}</td>
+            <td>${e.human_label || ""}</td>
             <td>${e.image_url ? `<a href="${e.image_url}" target="_blank">view</a>` : ""}</td>
           </tr>`;
         }
@@ -66,8 +119,12 @@
       }
 
       loadBins();
-      loadEvents();
-      setInterval(loadEvents, 5000);
+      loadDepositEvents();
+      loadAllEvents();
+      setInterval(() => {
+        loadDepositEvents();
+        loadAllEvents();
+      }, 5000); 
     </script>
   </body>
 </html>
