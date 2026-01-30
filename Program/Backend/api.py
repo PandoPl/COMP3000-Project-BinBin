@@ -27,7 +27,7 @@ def parse_timestamp(ts):
 
         timestamp = datetime.fromisoformat(ts_str)
         if timestamp.tzinfo is None:
-            timestamp = timestamp.replace(tzinfo=timezone.utc)
+            timestamp = timestamp.replace(tzinfo = timezone.utc)
 
         return timestamp
 
@@ -69,7 +69,6 @@ def bin_event():
     if "bin_id" not in data:
         return jsonify({"error": "bin_id is required"}), 400
 
-
     try:
         bin_id = int(data["bin_id"])
     except (TypeError, ValueError):
@@ -79,12 +78,10 @@ def bin_event():
     if not b:
         return jsonify({"error": "Unknown bin_id"}), 404
 
-
     try:
         timestamp = parse_timestamp(data.get("timestamp"))
     except ValueError:
         return jsonify({"error": "Invalid timestamp format"}), 400
-
 
     ev = Event(
         bin_id = bin_id,
@@ -135,7 +132,6 @@ def bin_event_image():
     stamped = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     filename = f"{stamped}_{safe_name}"
     save_path = upload_dir / filename
-
     image.save(save_path)
 
     image_path = f"uploads/bin_{bin_id}/{filename}"
@@ -161,8 +157,44 @@ def bin_event_image():
 @api_bp.route("/events", methods = ["GET"])
 def list_events():
     bin_id = request.args.get("bin_id", type = int)
+    event_type = request.args.get("event_type")
+    unlabeled = request.args.get("unlabeled", default = "0")
+
     query = Event.query
+
     if bin_id is not None:
         query = query.filter_by(bin_id = bin_id)
+
+    if event_type:
+        query = query.filter_by(event_type = event_type)
+
+    if unlabeled == "1":
+        query = query.filter(Event.human_label.is_(None))
+
     events = query.order_by(Event.timestamp.desc()).limit(100).all()
     return jsonify([e.to_dict() for e in events]), 200
+
+
+@api_bp.route("/events/<int:event_id>/label", methods = ["POST"])
+def label_event(event_id):
+    data = request.get_json(silent=True) or {}
+
+    label = data.get("human_label")
+    verified = data.get("verified", True)
+
+    if label not in ("recyclable", "non_recyclable", None, ""):
+        return jsonify({"error": "human_label must be 'recyclable' or 'non_recyclable'"}), 400
+
+    ev = Event.query.get(event_id)
+    if not ev:
+        return jsonify({"error": "Unknown event_id"}), 404
+
+    if label in (None, ""):
+        ev.human_label = None
+        ev.verified = False
+    else:
+        ev.human_label = label
+        ev.verified = bool(verified)
+
+    db.session.commit()
+    return jsonify(ev.to_dict()), 200
