@@ -3,7 +3,7 @@ import sqlite3
 import shutil
 from pathlib import Path
 
-DB_PATH = Path(__file__).resolve().parents[1] / "backend" / "binbin.db"
+DB_PATH = Path(__file__).resolve().parents[1] / "backend" / "instance" / "binbin.db"
 BACKEND_STATIC = Path(__file__).resolve().parents[1] / "backend" / "static"
 OUT_DIR = Path(__file__).resolve().parent / "dataset_binary"
 
