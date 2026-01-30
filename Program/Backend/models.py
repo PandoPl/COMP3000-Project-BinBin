@@ -29,12 +29,13 @@ class Event(db.Model):
     id = db.Column(db.Integer, primary_key = True)
     bin_id = db.Column(db.Integer, db.ForeignKey("bins.id"), nullable=False)
     timestamp = db.Column(db.DateTime(timezone = True), default = now_utc)
-    event_type = db.Column(db.String(30))  # e.g. "fill_level", "classification"
-    distance_cm = db.Column(db.Float)      # for fill_level events
+    event_type = db.Column(db.String(30))  # e.g. "fill_level", "classification", "deposit"
+    distance_cm = db.Column(db.Float)      # for fill_level / deposit events
     label = db.Column(db.String(50))       # e.g. "plastic_bottle"
     confidence = db.Column(db.Float)
-
-    image_path = db.Column(db.String(255)) # relative to /static/
+    image_path = db.Column(db.String(255)) 
+    human_label = db.Column(db.String(30)) # "recyclable" or "non_recyclable"
+    verified = db.Column(db.Boolean, default = False)
 
     bin = db.relationship("Bin", backref = "events")
 
@@ -49,5 +50,7 @@ class Event(db.Model):
             "distance_cm": self.distance_cm,
             "label": self.label,
             "confidence": self.confidence,
-            "image_url": image_url
+            "image_url": image_url,
+            "human_label": self.human_label,
+            "verified": self.verified
         }
