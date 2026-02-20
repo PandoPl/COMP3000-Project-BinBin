@@ -1,0 +1,58 @@
+from pathlib import Path
+import shutil
+from sklearn.model_selection import train_test_split
+
+SRC = Path(__file__).resolve().parent / "dataset_binary"
+OUT = Path(__file__).resolve().parent / "dataset_binary_split"
+
+CLASSES = ["non_recyclable", "recyclable"]
+
+def list_images(folder: Path):
+    exts = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
+    return [p for p in folder.rglob("*") if p.suffix.lower() in exts]
+
+def copy_files(files, dest_dir: Path):
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for p in files:
+        shutil.copy2(p, dest_dir / p.name)
+
+def main():
+    X = []
+    y = []
+
+    for i, cls in enumerate(CLASSES):
+        files = list_images(SRC / cls)
+        X.extend(files)
+        y.extend([cls] * len(files))
+
+    if not X:
+        raise RuntimeError("No images found in dataset_binary")
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.15, random_state=123, stratify=y
+    )
+
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train, y_train, test_size=0.1765, random_state=123, stratify=y_train
+    )
+
+    if OUT.exists():
+        shutil.rmtree(OUT)
+
+    for split_name, X_split, y_split in [
+        ("train", X_train, y_train),
+        ("val", X_val, y_val),
+        ("test", X_test, y_test),
+    ]:
+        for cls in CLASSES:
+            files = [p for p, lab in zip(X_split, y_split) if lab == cls]
+            copy_files(files, OUT / split_name / cls)
+
+    for split_name in ["train", "val", "test"]:
+        counts = {}
+        for cls in CLASSES:
+            counts[cls] = len(list_images(OUT / split_name / cls))
+        print(split_name, counts)
+
+if __name__ == "__main__":
+    main()

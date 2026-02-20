@@ -1,4 +1,3 @@
-# backend/app.py
 from flask import Flask, render_template
 from api import api_bp
 from db import init_db
